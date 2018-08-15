@@ -1,9 +1,9 @@
 package ctrl
 
 import (
+	"../../pistons/vm"
 	"html/template"
 	"net/http"
-	"pistons/vm"
 )
 
 type loginController struct {

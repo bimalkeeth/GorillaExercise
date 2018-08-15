@@ -1,12 +1,12 @@
 package ctrl
 
 import (
+	"../../pistons/model"
+	"../../pistons/vm"
 	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
-	"pistons/model"
-	"pistons/vm"
 	"strconv"
 )
 
