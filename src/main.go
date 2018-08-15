@@ -1,12 +1,12 @@
 package main
 
 import (
+	"../src/pistons/ctrl"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"pistons/ctrl"
 	"time"
 )
 
