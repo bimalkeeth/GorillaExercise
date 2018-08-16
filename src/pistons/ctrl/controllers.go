@@ -1,8 +1,11 @@
 package ctrl
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/gorilla/reverse"
 	"html/template"
 	"net/http"
+	"net/url"
 )
 
 var (
@@ -12,26 +15,48 @@ var (
 	admin    *adminController    = new(adminController)
 )
 
+var (
+	partModelsRegexp *reverse.Regexp
+	TemplateFunc     template.FuncMap
+)
+
+func init() {
+	partModelsRegexp, _ = reverse.CompileRegexp(`/parts/makes/(?p<makeId>.+)/models`)
+	TemplateFunc = template.FuncMap{"partModels": reverter(partModelsRegexp)}
+}
+
+func reverter(regexp *reverse.Regexp) func(...string) (string, error) {
+	return func(params ...string) (string, error) {
+		values := url.Values{}
+		for i := 0; i < len(params); i += 2 {
+			values[params[i]] = []string{params[i+1]}
+		}
+		return regexp.Revert(values)
+	}
+}
+
 func Setup(tc *template.Template) {
 	SetTemplateCache(tc)
 	createResourceServer()
 
-	http.HandleFunc("/", login.GetLogin)
-	http.HandleFunc("/parts/makes", parts.GetMake)
-	http.HandleFunc("/parts/models", parts.PostModel)
-	http.HandleFunc("/parts/years", parts.PostYear)
-	http.HandleFunc("/parts/engines", parts.PostEngine)
-	http.HandleFunc("/parts/searchresults", parts.PostSearch)
-	http.HandleFunc("/parts", parts.GetPartSearchPartial)
-	http.HandleFunc("/parts/detail", parts.GetPart)
-	http.HandleFunc("/checkout", checkout.HandleCheckout)
-	http.HandleFunc("/admin", admin.HandleLogin)
-	http.HandleFunc("/admin/menu", admin.GetMenu)
-	http.HandleFunc("/admin/employees/new", admin.HandleCreateEmp)
-	http.HandleFunc("/admin/employee", admin.GetEmployeeView)
+	r := mux.NewRouter()
 
-	http.HandleFunc("/api/makes", parts.AutocompleteMake)
-	http.HandleFunc("/api/models", parts.AutocompleteModel)
+	r.HandleFunc("/", login.GetLogin)
+	r.HandleFunc("/parts/makes", parts.GetMake)
+	r.HandleFunc("/parts/models", parts.PostModel)
+	r.HandleFunc("/parts/years", parts.PostYear)
+	r.HandleFunc("/parts/engines", parts.PostEngine)
+	r.HandleFunc("/parts/searchresults", parts.PostSearch)
+	r.HandleFunc("/parts", parts.GetPartSearchPartial)
+	r.HandleFunc("/parts/detail", parts.GetPart)
+	r.HandleFunc("/checkout", checkout.HandleCheckout)
+	r.HandleFunc("/admin", admin.HandleLogin)
+	r.HandleFunc("/admin/menu", admin.GetMenu)
+	r.HandleFunc("/admin/employees/new", admin.HandleCreateEmp)
+	r.HandleFunc("/admin/employee", admin.GetEmployeeView)
+
+	r.HandleFunc("/api/makes", parts.AutocompleteMake)
+	r.HandleFunc("/api/models", parts.AutocompleteModel)
 }
 
 func createResourceServer() {
